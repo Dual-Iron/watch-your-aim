@@ -1,9 +1,9 @@
 ﻿{
-  "id": "testmod",
-  "name": "Test Mod",
-  "version": "0.1.0",
-  "authors": "Author",
-  "description": "Put a neat description here",
+  "id": "watch-your-aim",
+  "name": "Watch Your Aim",
+  "version": "1.0.0",
+  "authors": "Dual",
+  "description": "Further dissuades scavengers from attacking things if they might also hit a friend, so you need not fear overseers placing themselves directly in front of you.",
   "requirements": [],
   "requirements_names": [],
   "checksum_override_version": false
