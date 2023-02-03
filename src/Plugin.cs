@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using RWCustom;
 using System;
 using System.Security.Permissions;
 using UnityEngine;
@@ -8,16 +9,28 @@ using UnityEngine;
 
 namespace WatchYourAim;
 
-[BepInPlugin("com.dual.watch-your-aim", "Watch Your Aim", "0.1.0")]
+[BepInPlugin("com.dual.watch-your-aim", "Watch Your Aim", "1.0.0")]
 sealed class Plugin : BaseUnityPlugin
 {
+    // Just a local
+    private WeakReference<Creature> target;
+
     public void OnEnable()
     {
+        On.Scavenger.TryThrow_BodyChunk_ViolenceType_Nullable1 += Scavenger_TryThrow_BodyChunk_ViolenceType_Nullable1;
         On.ScavengerAI.IsThrowPathClearFromFriends += ScavengerAI_IsThrowPathClearFromFriends;
+    }
+
+    private void Scavenger_TryThrow_BodyChunk_ViolenceType_Nullable1(On.Scavenger.orig_TryThrow_BodyChunk_ViolenceType_Nullable1 orig, Scavenger self, BodyChunk aimChunk, ScavengerAI.ViolenceType violenceType, Vector2? aimPosition)
+    {
+        target = aimChunk.owner is Creature c ? new(c) : null;
+
+        orig(self, aimChunk, violenceType, aimPosition);
     }
 
     private bool ScavengerAI_IsThrowPathClearFromFriends(On.ScavengerAI.orig_IsThrowPathClearFromFriends orig, ScavengerAI self, Vector2 throwPos, float margin)
     {
+        margin += 20f;
         return orig(self, throwPos, margin) && !Obstructed(self, throwPos, margin);
     }
 
@@ -25,6 +38,34 @@ sealed class Plugin : BaseUnityPlugin
     {
         Vector2 from = self.scavenger.mainBodyChunk.pos;
 
-        throw new NotImplementedException();
+        foreach (Tracker.CreatureRepresentation bystander in self.tracker.creatures) {
+            if (!bystander.VisualContact || !self.DontWantToThrowAt(bystander) || bystander.representedCreature.realizedCreature == null) {
+                continue;
+            }
+
+            Vector2 bystanderPos = bystander.representedCreature.realizedCreature.mainBodyChunk.pos;
+
+            // For Custom.DistanceToLine, see https://www.desmos.com/calculator/gxxkp3wfmn
+
+            bool alongThrowDir = Vector2.Dot(from - bystanderPos, from - to) > 0f;
+            bool closeToThrowLine = Mathf.Abs(Custom.DistanceToLine(bystanderPos, from, to)) < 50f + margin;
+            bool inFrontOfTarget = Vector2.Distance(from, bystanderPos) < Vector2.Distance(from, to) + margin;
+
+            if (alongThrowDir && closeToThrowLine && inFrontOfTarget) {
+                // Definitely crosses paths with target.
+                return true;
+            }
+
+            if (alongThrowDir && closeToThrowLine && target.TryGetTarget(out Creature critter) && CouldMiss(critter)) {
+                // Could pass through the target and hit friend. Vanilla doesn't perform this check, but should.
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private bool CouldMiss(Creature critter)
+    {
+        return critter.Template.type == CreatureTemplate.Type.Overseer || critter.Template.type == CreatureTemplate.Type.EggBug || critter.Template.type == CreatureTemplate.Type.Slugcat;
     }
 }
