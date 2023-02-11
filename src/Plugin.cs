@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using MoreSlugcats;
 using RWCustom;
 using System;
 using System.Security.Permissions;
@@ -9,7 +10,7 @@ using UnityEngine;
 
 namespace WatchYourAim;
 
-[BepInPlugin("com.dual.watch-your-aim", "Watch Your Aim", "1.0.0")]
+[BepInPlugin("com.dual.watch-your-aim", "Watch Your Aim", "1.0.1")]
 sealed class Plugin : BaseUnityPlugin
 {
     // Just a local
@@ -66,6 +67,6 @@ sealed class Plugin : BaseUnityPlugin
 
     private bool CouldMiss(Creature critter)
     {
-        return critter.Template.type == CreatureTemplate.Type.Overseer || critter.Template.type == CreatureTemplate.Type.EggBug || critter.Template.type == CreatureTemplate.Type.Slugcat;
+        return critter.collisionLayer == 0 || critter.collisionRange <= 0 || critter is Overseer or EggBug or Yeek or Player;
     }
 }

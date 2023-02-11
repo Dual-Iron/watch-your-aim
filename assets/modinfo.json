@@ -1,7 +1,7 @@
 ﻿{
   "id": "watch-your-aim",
   "name": "Watch Your Aim",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "authors": "Dual",
   "description": "Further dissuades scavengers from throwing spears if they might hit a friend, so overseers are less of a death sentence when chilling with the tribe. Being chieftain can be very tiring otherwise.",
   "requirements": [],
