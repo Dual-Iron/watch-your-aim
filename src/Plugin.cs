@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace WatchYourAim;
 
-[BepInPlugin("com.dual.watch-your-aim", "Watch Your Aim", "1.0.1")]
+[BepInPlugin("com.dual.watch-your-aim", "Watch Your Aim", "1.0.2")]
 sealed class Plugin : BaseUnityPlugin
 {
     // Just a local
@@ -24,14 +24,21 @@ sealed class Plugin : BaseUnityPlugin
 
     private void Scavenger_TryThrow_BodyChunk_ViolenceType_Nullable1(On.Scavenger.orig_TryThrow_BodyChunk_ViolenceType_Nullable1 orig, Scavenger self, BodyChunk aimChunk, ScavengerAI.ViolenceType violenceType, Vector2? aimPosition)
     {
-        target = aimChunk.owner is Creature c ? new(c) : null;
+        if (!self.abstractCreature.world.game.rainWorld.safariMode) {
+            target = aimChunk?.owner is Creature c ? new(c) : null;
+        }
 
         orig(self, aimChunk, violenceType, aimPosition);
     }
 
     private bool ScavengerAI_IsThrowPathClearFromFriends(On.ScavengerAI.orig_IsThrowPathClearFromFriends orig, ScavengerAI self, Vector2 throwPos, float margin)
     {
+        if (self.scavenger.abstractCreature.world.game.rainWorld.safariMode) {
+            return orig(self, throwPos, margin);
+        }
+
         margin += 20f;
+
         return orig(self, throwPos, margin) && !Obstructed(self, throwPos, margin);
     }
 
